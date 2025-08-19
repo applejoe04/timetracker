@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My Default Settings — Time Tracker</title>
+  <meta name="description" content="Lightweight time tracker with one‑tap activity switching, hourly check‑ins, CSV & ICS export. All local.">
+  <style>
+    :root{
+      --bg:#0f1220;           /* deep ink */
+      --card:#171a2b;         /* panel */
+      --muted:#8b91b4;        /* secondary text */
+      --text:#e8ebff;         /* main text */
+      --accent:#7c9aff;       /* primary */
+      --accent-2:#63e6be;     /* success */
+      --danger:#ff6b6b;       /* danger */
+      --warn:#ffd166;         /* warn */
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+      --radius:18px;
+    }
+    html,body{height:100%}
+    body{
+      margin:0; background: radial-gradient(1200px 800px at 80% -10%, #1b2040 0%, var(--bg) 50%), var(--bg);
+      color:var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+      display:flex; align-items:stretch; justify-content:center;
+    }
+    .app{ width: min(980px, 100%); padding:16px; }
+    header{
+      display:flex; align-items:center; gap:12px; padding:8px 6px 16px; flex-wrap:wrap;
+    }
+    .logo{
+      width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg, var(--accent), #b38cff);
+      box-shadow: var(--shadow);
+      display:grid; place-items:center; font-weight:900; font-size:18px; color:white;
+    }
+    .title{ font-size:20px; font-weight:800; letter-spacing:.2px }
+    .sub{ color:var(--muted); font-size:13px }
+
+    .panel{ background: rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,.07); border-radius: var(--radius); box-shadow: var(--shadow); }
+
+    .grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; }
+    @media (max-width:640px){ .grid{ grid-template-columns: repeat(2, 1fr); } }
+
+    .chip{ background: var(--card); border:1px solid rgba(255,255,255,.06); border-radius: 16px; padding:14px 12px; display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none; transition: transform .06s ease, border-color .2s ease; }
+    .chip:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.16) }
+    .chip .icon{ font-size:20px; line-height:1 }
+    .chip .label{ font-weight:700; font-size:14px }
+
+    .section{ margin-top:14px; padding:14px; }
+    .section h2{ margin:0 0 8px; font-size:14px; text-transform:uppercase; letter-spacing:.12em; color:var(--muted) }
+
+    .current{ display:flex; align-items:center; justify-content:space-between; padding:16px; gap:12px }
+    .current .left{ display:flex; align-items:center; gap:12px }
+    .badge{ background: rgba(124,154,255,.15); color: var(--accent); border:1px solid rgba(124,154,255,.4); padding:8px 10px; border-radius:14px; font-weight:800; display:flex; align-items:center; gap:8px }
+    .elapsed{ font-variant-numeric: tabular-nums; font-weight:800; font-size:22px }
+
+    .btns{ display:flex; gap:8px; flex-wrap:wrap }
+    button{ background: #222744; color:var(--text); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:10px 14px; font-weight:700; cursor:pointer }
+    button.primary{ background: linear-gradient(180deg, #7c9aff, #6b86f0); border-color: rgba(0,0,0,.2) }
+    button.success{ background: linear-gradient(180deg, #63e6be, #43c59a); color:#052a20 }
+    button.warn{ background: linear-gradient(180deg, var(--warn), #e0b24c); color:#2b2100 }
+    button.danger{ background: linear-gradient(180deg, #ff8b8b, var(--danger)); color:#3c0000 }
+
+    .log{ width:100%; border-collapse: collapse; }
+    .log th, .log td{ padding:10px 8px; border-bottom:1px solid rgba(255,255,255,.06); font-size:14px }
+    .log th{ text-align:left; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; font-weight:800; font-size:12px }
+
+    .toolbar{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:space-between; padding:12px 16px }
+    .hint{ color:var(--muted); font-size:12px }
+
+    .pill{ background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:999px; padding:6px 10px; font-size:12px; color:var(--muted) }
+
+    dialog.modal{ border:none; border-radius: 16px; padding:0; background:var(--card); color:var(--text); box-shadow: var(--shadow); width:min(520px, 95vw) }
+    .modal header{ padding:16px; border-bottom:1px solid rgba(255,255,255,.08) }
+    .modal .content{ padding:16px }
+    .modal .actions{ display:flex; gap:8px; justify-content:flex-end; padding:16px; border-top:1px solid rgba(255,255,255,.08) }
+
+    input[type="text"]{ width:100%; background:#0f1328; color:var(--text); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:10px 12px; font-size:14px }
+    .sr{ position:absolute!important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0 }
+    a.link{ color:var(--accent) }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="logo" aria-hidden="true">⏱️</div>
+      <div>
+        <div class="title">My Default Settings — Time Tracker</div>
+        <div class="sub">Tap an activity to start. Switch any time. Exports: CSV & ICS. Everything stays on your device.</div>
+      </div>
+      <div style="margin-left:auto; display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+        <span class="pill" id="pwaHint">Tip: Add to Home Screen for app‑like feel</span>
+        <button id="notifyBtn" title="Enable hourly check‑ins" class="primary">Enable Check‑ins</button>
+      </div>
+    </header>
+
+    <!-- Current activity panel -->
+    <section class="panel section" id="currentPanel" style="display:none">
+      <h2>Now tracking</h2>
+      <div class="current">
+        <div class="left">
+          <div class="badge" id="currentBadge">🔘 <span id="currentName">—</span></div>
+          <div>
+            <div>Started: <strong id="startedAt">—</strong></div>
+            <div class="elapsed" id="elapsed">00:00:00</div>
+          </div>
+        </div>
+        <div class="btns">
+          <button id="switchBtn" class="warn">Switch Activity</button>
+          <button id="endBtn" class="danger">End Activity</button>
+        </div>
+      </div>
+      <div class="hint">You'll get a check‑in every hour to confirm you're still on this activity (if notifications are enabled).</div>
+    </section>
+
+    <!-- Activity grid -->
+    <section class="panel section">
+      <h2>What are you doing now?</h2>
+      <div class="grid" id="activityGrid" aria-live="polite"></div>
+      <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
+        <button id="addCustomBtn" class="primary">➕ Other Activity</button>
+        <span class="hint">Custom activities are remembered for quick access.</span>
+      </div>
+    </section>
+
+    <!-- Log + exports -->
+    <section class="panel section" style="margin-bottom:20px">
+      <div class="toolbar">
+        <h2 style="margin:0">Activity Log</h2>
+        <div style="display:flex; gap:8px; flex-wrap:wrap">
+          <button id="exportCsvBtn" class="success">⬇️ Export CSV</button>
+          <button id="exportIcsBtn" class="success">⬇️ Export ICS</button>
+          <button id="clearBtn" class="">🗑️ Clear Log</button>
+        </div>
+      </div>
+      <div style="overflow:auto">
+        <table class="log" id="logTable">
+          <thead>
+            <tr>
+              <th>Activity</th>
+              <th>Start</th>
+              <th>End</th>
+              <th>Duration</th>
+            </tr>
+          </thead>
+          <tbody id="logBody"></tbody>
+        </table>
+      </div>
+      <div class="hint" style="padding:10px 2px">Data is saved locally in your browser. Closing the tab won't lose anything.</div>
+    </section>
+  </div>
+
+  <!-- Check‑in modal -->
+  <dialog class="modal" id="checkinModal">
+    <header><div class="title" style="font-size:16px">Still doing <span id="modalActivity">this activity</span>?</div></header>
+    <div class="content">
+      <p>It's been about an hour since you started. Do you want to keep tracking the current activity, switch, or end it?</p>
+    </div>
+    <div class="actions">
+      <button id="modalYes" class="success">✅ Yes, continue</button>
+      <button id="modalSwitch" class="warn">🔄 Switch</button>
+      <button id="modalEnd" class="danger">⏹ End</button>
+    </div>
+  </dialog>
+
+  <!-- Add custom activity modal -->
+  <dialog class="modal" id="customModal">
+    <header><div class="title" style="font-size:16px">New activity</div></header>
+    <form method="dialog" class="content" id="customForm" onsubmit="return false;">
+      <label class="sr" for="customName">Activity name</label>
+      <input id="customName" type="text" placeholder="e.g., Groceries, Reading, Errand…" maxlength="40" />
+    </form>
+    <div class="actions">
+      <button id="customCancel">Cancel</button>
+      <button id="customSave" class="primary">Add</button>
+    </div>
+  </dialog>
+
+<script>
+(function(){
+  // --- Utilities ---
+  const $ = sel => document.querySelector(sel);
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
+  const pad = n => String(n).padStart(2, '0');
+  const fmtTime = d => new Date(d).toLocaleString(undefined, { hour:'numeric', minute:'2-digit', second:'2-digit' });
+  const fmtShort = d => new Date(d).toLocaleString(undefined, { year:'2-digit', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+  function fmtDuration(ms){
+    const s = Math.floor(ms/1000);
+    const hh = Math.floor(s/3600), mm = Math.floor((s%3600)/60), ss = s%60;
+    return `${pad(hh)}:${pad(mm)}:${pad(ss)}`;
+  }
+  function msToHuman(ms){
+    const s = Math.floor(ms/1000);
+    const h = Math.floor(s/3600); const m = Math.floor((s%3600)/60);
+    return (h? h+"h ":"") + (m? m+"m":"0m");
+  }
+  function download(filename, content, type='text/plain'){
+    const blob = new Blob([content], {type});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
+  }
+
+  // --- Data layer (localStorage) ---
+  const LS_KEY = 'mds_time_tracker_v1';
+  const DEFAULTS = [
+    {name:'Smoking', icon:'◼️'},
+    {name:'Gaming', icon:'🎮'},
+    {name:'Working', icon:'💻'},
+    {name:'Hygiene', icon:'🚿'},
+    {name:'Eating', icon:'🍽️'},
+    {name:'Sleeping', icon:'🛏️'},
+    {name:'Resting', icon:'😌'},
+    {name:'Exercise', icon:'🏃'},
+    {name:'Television', icon:'📺'},
+    {name:'Branding', icon:'🎨'},
+    {name:'Laundry', icon:'🧺'},
+    {name:'Cleaning', icon:'🧹'}
+  ];
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(LS_KEY);
+      if(!raw) return { activities: DEFAULTS, custom: [], current:null, log: [] };
+      const s = JSON.parse(raw);
+      if(!Array.isArray(s.activities)) s.activities = DEFAULTS;
+      if(!Array.isArray(s.custom)) s.custom = [];
+      if(!Array.isArray(s.log)) s.log = [];
+      return s;
+    }catch(e){
+      console.warn('Resetting state due to parse error', e);
+      return { activities: DEFAULTS, custom: [], current:null, log: [] };
+    }
+  }
+  function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+
+  let state = loadState();
+  let tickHandle = null;
+  let nextCheckAt = null; // timestamp for next hourly check‑in
+
+  // --- UI build ---
+  const grid = $('#activityGrid');
+  function renderGrid(){
+    grid.innerHTML = '';
+    const all = [...state.activities, ...state.custom];
+    all.forEach(a => {
+      const btn = document.createElement('button');
+      btn.className = 'chip';
+      btn.innerHTML = `<span class="icon">${a.icon||'🔘'}</span><span class="label">${a.name}</span>`;
+      btn.addEventListener('click', () => startOrSwitch(a.name, a.icon||'🔘'));
+      grid.appendChild(btn);
+    });
+  }
+
+  function updateCurrentUI(){
+    const panel = $('#currentPanel');
+    if(!state.current){ panel.style.display='none'; return; }
+    panel.style.display='block';
+    $('#currentBadge').innerHTML = `${state.current.icon||'🔘'} <span id="currentName">${state.current.name}</span>`;
+    $('#startedAt').textContent = fmtTime(state.current.start);
+    updateElapsed();
+  }
+
+  function updateElapsed(){
+    if(!state.current){ $('#elapsed').textContent = '00:00:00'; return; }
+    const ms = Date.now() - state.current.start;
+    $('#elapsed').textContent = fmtDuration(ms);
+    // schedule hourly check‑in logic
+    if(nextCheckAt && Date.now() >= nextCheckAt){ doCheckIn(); }
+  }
+
+  function startTick(){
+    if(tickHandle) cancelAnimationFrame(tickHandle);
+    const loop = () => { updateElapsed(); tickHandle = requestAnimationFrame(loop); };
+    tickHandle = requestAnimationFrame(loop);
+  }
+
+  function stopTick(){ if(tickHandle) cancelAnimationFrame(tickHandle); tickHandle=null; }
+
+  // --- Core actions ---
+  function startOrSwitch(name, icon){
+    // If current exists, end it first and log
+    if(state.current){
+      const now = Date.now();
+      state.log.push({ activity: state.current.name, icon: state.current.icon, start: state.current.start, end: now, duration: now - state.current.start });
+    }
+    // start new
+    state.current = { name, icon, start: Date.now() };
+    nextCheckAt = Date.now() + 60*60*1000; // 1 hour from now
+    saveState();
+    updateCurrentUI();
+    startTick();
+  }
+
+  function endCurrent(){
+    if(!state.current) return;
+    const now = Date.now();
+    state.log.push({ activity: state.current.name, icon: state.current.icon, start: state.current.start, end: now, duration: now - state.current.start });
+    state.current = null; nextCheckAt = null; saveState();
+    updateCurrentUI();
+    renderLog();
+    stopTick();
+  }
+
+  // --- Log rendering ---
+  function renderLog(){
+    // sort by start asc
+    state.log.sort((a,b)=>a.start-b.start);
+    const tbody = $('#logBody');
+    tbody.innerHTML = '';
+    state.log.forEach(entry => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${entry.icon||'🔘'} ${entry.activity}</td>
+                      <td>${fmtShort(entry.start)}</td>
+                      <td>${fmtShort(entry.end)}</td>
+                      <td>${msToHuman(entry.duration)}</td>`;
+      tbody.appendChild(tr);
+    });
+    saveState();
+  }
+
+  // --- Custom activity add ---
+  const customModal = $('#customModal');
+  $('#addCustomBtn').addEventListener('click', ()=>{
+    $('#customName').value=''; customModal.showModal(); setTimeout(()=>$('#customName').focus(), 50);
+  });
+  $('#customCancel').addEventListener('click', ()=> customModal.close());
+  $('#customSave').addEventListener('click', ()=>{
+    const raw = $('#customName').value.trim();
+    if(!raw) return;
+    const name = raw[0].toUpperCase()+raw.slice(1);
+    const icon = '🔘';
+    // avoid duplicates (case‑insensitive)
+    const exists = [...state.activities, ...state.custom].some(x=>x.name.toLowerCase()===name.toLowerCase());
+    if(!exists){ state.custom.unshift({name, icon}); saveState(); renderGrid(); }
+    customModal.close();
+  });
+
+  // --- Exports ---
+  $('#exportCsvBtn').addEventListener('click', ()=>{
+    const rows = [['Activity','Start','End','Duration (hh:mm:ss)']];
+    const data = [...state.log];
+    // include running one up to now? We'll not include partials to avoid confusion.
+    data.forEach(e=>{
+      rows.push([
+        e.activity,
+        new Date(e.start).toISOString(),
+        new Date(e.end).toISOString(),
+        fmtDuration(e.duration)
+      ]);
+    });
+    const csv = rows.map(r=> r.map(cell=>{
+      const s = String(cell).replaceAll('"','""');
+      return /[",\n]/.test(s) ? `"${s}"` : s;
+    }).join(',')).join('\n');
+    download(`time-log-${new Date().toISOString().slice(0,10)}.csv`, csv, 'text/csv');
+  });
+
+  function icsEscape(s){ return String(s).replace(/[\\;,\n]/g, m=> ({'\\':'\\\\',';':'\\;','\,':'\\,','\n':'\\n'}[m]) ); }
+  function toICS(){
+    const lines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//My Default Settings//Time Tracker//EN',
+      'CALSCALE:GREGORIAN'
+    ];
+    state.log.forEach((e, idx)=>{
+      const dtStart = new Date(e.start);
+      const dtEnd = new Date(e.end);
+      const z = d=> d.toISOString().replace(/[-:]/g,'').replace('.000',''); // YYYYMMDDTHHMMSSZ
+      const uid = `${dtStart.getTime()}-${idx}@mydefaultsettings`;
+      lines.push('BEGIN:VEVENT');
+      lines.push(`UID:${uid}`);
+      lines.push(`DTSTAMP:${z(new Date())}`);
+      lines.push(`DTSTART:${z(dtStart)}`);
+      lines.push(`DTEND:${z(dtEnd)}`);
+      lines.push(`SUMMARY:${icsEscape(e.activity)}`);
+      lines.push('END:VEVENT');
+    });
+    lines.push('END:VCALENDAR');
+    return lines.join('\r\n');
+  }
+  $('#exportIcsBtn').addEventListener('click', ()=>{
+    const ics = toICS();
+    download(`time-log-${new Date().toISOString().slice(0,10)}.ics`, ics, 'text/calendar');
+  });
+
+  // --- Clear log ---
+  $('#clearBtn').addEventListener('click', ()=>{
+    if(!state.log.length){ alert('Log is already empty.'); return; }
+    if(confirm('Clear the entire log? This does not affect the currently running activity.')){
+      state.log = []; saveState(); renderLog();
+    }
+  });
+
+  // --- Notification / hourly check‑ins ---
+  const checkinModal = $('#checkinModal');
+  const notifyBtn = $('#notifyBtn');
+
+  function ensureNotificationPermission(){
+    if(!('Notification' in window)) return Promise.resolve('unsupported');
+    if(Notification.permission === 'granted') return Promise.resolve('granted');
+    if(Notification.permission === 'denied') return Promise.resolve('denied');
+    return Notification.requestPermission();
+  }
+
+  function pingNotification(){
+    if(!('Notification' in window)) return;
+    if(Notification.permission !== 'granted') return;
+    const n = new Notification('Time Tracker — Hourly check‑in', {
+      body: state.current ? `Still doing ${state.current.name}? Tap to respond.` : 'No activity running.',
+      tag: 'mds-checkin'
+    });
+    // Clicking focuses the tab; interaction choices handled in modal
+    n.onclick = () => window.focus();
+  }
+
+  async function enableCheckins(){
+    const res = await ensureNotificationPermission();
+    if(res === 'denied'){
+      alert('Notifications are blocked. You can still get in‑app check‑ins.');
+    } else if(res === 'unsupported'){
+      alert('Notifications not supported in this browser. In‑app check‑ins will still appear.');
+    } else {
+      alert('Hourly check‑ins enabled. Keep this tab or installed app open.');
+    }
+  }
+
+  notifyBtn.addEventListener('click', enableCheckins);
+
+  function doCheckIn(){
+    // schedule next hour regardless of response
+    nextCheckAt = Date.now() + 60*60*1000;
+    if(!state.current) return;
+    $('#modalActivity').textContent = state.current.name;
+    checkinModal.showModal();
+    pingNotification();
+  }
+
+  $('#modalYes').addEventListener('click', ()=>{ checkinModal.close(); /* continue */ });
+  $('#modalSwitch').addEventListener('click', ()=>{ checkinModal.close(); window.scrollTo({top:0, behavior:'smooth'}); });
+  $('#modalEnd').addEventListener('click', ()=>{ checkinModal.close(); endCurrent(); });
+
+  // --- Buttons in current panel ---
+  $('#switchBtn').addEventListener('click', ()=> window.scrollTo({ top: 0, behavior:'smooth' }));
+  $('#endBtn').addEventListener('click', endCurrent);
+
+  // --- Initial render ---
+  renderGrid();
+  updateCurrentUI();
+  renderLog();
+  if(state.current){ startTick(); nextCheckAt = Date.now() + (60*60*1000 - ((Date.now()-state.current.start)%(60*60*1000))); }
+})();
+</script>
+</body>
+</html>
